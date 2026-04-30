@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TodoListCalender</string>
+    <string name="tv_title">TodoListCalender</string>
+    <string name="tv_editDate">  </string>
+    <string name="bt_back">カレンダーに戻る</string>
+    <string name="bt_edit">編集確定</string>
+    <string name="bt_add">リストを編集</string>
+</resources>
