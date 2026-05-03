@@ -27,6 +27,7 @@ public class EditActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private DatabaseHelper _helper;
     private EditText etEdit;
+    private int editPosition = -1;  //-1は新規追加
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +51,15 @@ public class EditActivity extends AppCompatActivity {
         _helper = new DatabaseHelper(EditActivity.this);
         selectDateTodo();
 
+        lvEditList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String todo = todoList.get(position);
+                etEdit.setText(todo);
+                editPosition = position;
+
+            }
+        });
 
 
         //長押しでリストとデータベースから削除
@@ -70,6 +80,7 @@ public class EditActivity extends AppCompatActivity {
         });
 
     }
+
     public void onButtonBack(View view) {
         Intent intent = new Intent();
         intent.putExtra("date", selectDate);
@@ -79,15 +90,31 @@ public class EditActivity extends AppCompatActivity {
 
     public void onButtonEdit(View view) {
         String todo = etEdit.getText().toString();
-        todoList.add(todo);
+
+        if (editPosition == -1) {
+            todoList.add(todo);
+            SQLiteDatabase connection = _helper.getWritableDatabase();
+            SQLiteStatement stmt = connection.compileStatement("INSERT INTO todolist (date, todo) VALUES (?, ?)");
+            stmt.bindString(1, selectDate);
+            stmt.bindString(2, todo);
+            stmt.executeInsert();
+            connection.close();
+        } else {
+            String oldTodo = todoList.get(editPosition);
+            todoList.set(editPosition, todo);
+            SQLiteDatabase connection = _helper.getWritableDatabase();
+            SQLiteStatement stmt = connection.compileStatement(
+                    "UPDATE todolist SET todo = ? WHERE date = ? AND todo = ?");
+            stmt.bindString(1, todo);      // 新しい内容
+            stmt.bindString(2, selectDate);
+            stmt.bindString(3, oldTodo);   // 古い内容で対象を特定
+            stmt.executeUpdateDelete();
+            connection.close();
+            editPosition = -1; // 編集完了したらリセット
+
+        }
         adapter.notifyDataSetChanged();
         etEdit.setText("");
-        SQLiteDatabase connection = _helper.getWritableDatabase();
-        SQLiteStatement stmt = connection.compileStatement("INSERT INTO todolist (date, todo) VALUES (?, ?)");
-        stmt.bindString(1, selectDate);
-        stmt.bindString(2, todo);
-        stmt.executeInsert();
-        connection.close();
     }
 
     public void selectDateTodo() {
